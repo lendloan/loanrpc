@@ -1,0 +1,32 @@
+syntax  =  "proto3";
+package callfoot;
+option go_package="./callfoot";
+
+message RPCFootReq {
+    string              svrname = 1;
+    string              method = 2;
+    string              remote = 3;
+    string              localip = 4;
+    int64               timeout = 5;
+    map<string,string>  extra = 6;
+}
+
+message RPCFootRes {
+    int32               rescode = 1;
+    string              resmsg = 2;
+    map<string,string>  extra = 3;
+}
+
+message HTTPFootReq {
+    string              url = 1;
+    string              remote = 2;
+    string              localip = 3;
+    int64               timeout = 4;
+    map<string,string>  extra = 5;
+}
+
+message HTTPFootRes {
+    int32               rescode = 1;
+    string              resmsg = 2;
+    map<string,string>  extra = 3;
+}
