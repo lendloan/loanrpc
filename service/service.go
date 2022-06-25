@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"reflect"
+	"strconv"
 	"time"
 
 	hystrixsrc "github.com/afex/hystrix-go/hystrix"
@@ -28,6 +30,9 @@ import (
 	foot "github.com/lendloan/loanrpc/callfoot"
 	s2s "github.com/lendloan/loanrpc/registry"
 	registry "go-micro.dev/v4/registry"
+
+	"github.com/StabbyCutyou/buffstreams"
+	console "github.com/heegspace/heegrpc/console"
 )
 
 var svr_name string = ""
@@ -432,6 +437,55 @@ func HttpRequest(svrname, method string, request, response interface{}, contentT
 		if nil != err {
 			return
 		}
+	}
+
+	return
+}
+
+func Console(retCb console.RetCb) {
+	cfg := console.ConsoleListenerConfig{
+		MaxMessageSize: 1 << 20,
+		EnableLogging:  true,
+		Address:        buffstreams.FormatAddress("127.0.0.1", strconv.Itoa(0)),
+		ListenCb: func(ctx context.Context, conn *net.TCPListener) error {
+			logger.Info("LCallback ---------- ", conn.Addr().String())
+
+			return nil
+		},
+		ConnectCb: func(ctx context.Context, conn *net.TCPConn) error {
+			logger.Info("ConnectCb ---------- ", conn.RemoteAddr())
+
+			return nil
+		},
+		CloseCb: func(ctx context.Context, conn *net.TCPConn) error {
+			logger.Info("CloseCb ---------- ", conn.RemoteAddr())
+
+			return nil
+		},
+		CmdCb: func(ctx context.Context, conn *net.TCPConn, cmd string) error {
+			if nil != retCb {
+				res := retCb(cmd)
+				console.WriteToConsole(conn, []byte(res))
+			}
+
+			return nil
+		},
+		RTimeout: 120,
+	}
+
+	btl, err := console.ListenConsole(cfg)
+	if err != nil {
+		logger.Error("ListenConsole ", err)
+
+		return
+	}
+	defer btl.Close()
+
+	err = btl.StartListeningAsync()
+	if nil != err {
+		logger.Error("StartListening ", err)
+
+		return
 	}
 
 	return
